@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
+	"strings"
 )
 
 // Extract extracts environment variables and sets configuration values for a given sets of structs.
@@ -79,6 +80,9 @@ func getEnvName(v reflect.Value, i int, idx int, args ExtractorArgs) (string, er
 		prefix, ok = args.Configs[idx+1].(string)
 		if !ok {
 			panic("ERROR: Invalid configuration. Expected string")
+		}
+		if !strings.HasSuffix(prefix, "_") {
+			prefix = prefix + "_"
 		}
 	}
 	if !haveTagEnv {
