@@ -92,16 +92,17 @@ func ExampleExtract() {
 	type CustomAlias string
 
 	type ConfigExample struct {
-		FieldWithChangedTag      bool `env:"OTHER_CRAZY_NAME"`
-		BooleanFlag              bool
-		BooleanFlagWithoutDash   bool
-		RegularConfigField       int `env:"CRAZY_CONFIG_FIELD"`
-		ThisIsAnArgEnv           int
-		FieldWithoutTag          string      // linked to  "FIELD_WITHOUT_TAG" env var
-		CustomAliasTypeField     CustomAlias `env:"CUSTOM_ALIAS_TYPE_FIELD"`
-		ThisIsAnArgAndOsEnv      string      // Por precedencia se toma el arg cmd
-		IAmAnNonExistentVariable string
-		WithQuotes               string
+		FieldWithChangedTag          bool `env:"OTHER_CRAZY_NAME"`
+		BooleanFlag                  bool
+		BooleanFlagWithoutDash       bool
+		RegularConfigField           int `env:"CRAZY_CONFIG_FIELD"`
+		ThisIsAnArgEnv               int
+		FieldWithoutTag              string      // linked to  "FIELD_WITHOUT_TAG" env var
+		CustomAliasTypeField         CustomAlias `env:"CUSTOM_ALIAS_TYPE_FIELD"`
+		ThisIsAnArgAndOsEnv          string      // Por precedencia se toma el arg cmd
+		WithQuotes                   string
+		IAmAnNonExistentVariableStr  string
+		IAmAnNonExistentVariableBool bool
 	}
 
 	config := ConfigExample{}
@@ -122,7 +123,7 @@ func ExampleExtract() {
 		return
 	}
 	fmt.Print(config)
-	// Output: {1 Avengers: end game true Garfield: the mad cat true true 54321 CMD  base64==}
+	// Output: {true true true 1 54321 Avengers: end game Garfield: the mad cat CMD base64==  false}
 }
 
 func Example_extractWithPrefix() {

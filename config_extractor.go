@@ -20,7 +20,7 @@ func Extract(args ExtractorArgs) error {
 		}
 	}
 	for i := 0; i < len(args.Configs); i += 2 {
-		err := extractEnvByConfigIdx(i, args)
+		err := extractFieldValueByConfigIdx(i, args)
 		if err != nil {
 			return err
 		}
@@ -28,7 +28,7 @@ func Extract(args ExtractorArgs) error {
 	return nil
 }
 
-// extractEnvByConfigIdx extracts environment variables and sets configuration values for a
+// extractFieldValueByConfigIdx extracts environment variables and sets configuration values for a
 // given struct based on the specified index.
 // It takes the following parameters:
 // - idx: The index of the configuration object within the Configs slice.
@@ -36,7 +36,7 @@ func Extract(args ExtractorArgs) error {
 // The function iterates over the fields of the specified struct and sets their values based
 // on the corresponding environment variables.
 // The function returns an error if there is any issue setting the configuration values.
-func extractEnvByConfigIdx(idx int, args ExtractorArgs) error {
+func extractFieldValueByConfigIdx(idx int, args ExtractorArgs) error {
 	v := reflect.ValueOf(args.Configs[idx]).Elem()
 	vPtr := v
 	// if its a pointer, resolve its value
@@ -49,11 +49,11 @@ func extractEnvByConfigIdx(idx int, args ExtractorArgs) error {
 		if !f.IsValid() || !f.CanSet() {
 			continue
 		}
-		envName, err := getEnvName(v, i, idx, args)
+		prefix, envName, err := getEnvName(v, i, idx, args)
 		if err != nil {
 			continue
 		}
-		envVal, _ := getEnvValuesFromSources(envName, args.Options)
+		envVal, _ := getEnvValuesFromSources(prefix, envName, args.Options)
 		if envVal == "" {
 			continue
 		}
@@ -71,8 +71,8 @@ func extractEnvByConfigIdx(idx int, args ExtractorArgs) error {
 // - i: The index of the field within the struct.
 // - idx: The current index of the Configs slice.
 // - args: The ExtractorArgs containing the configuration options and values.
-// It returns the environment variable name as a string and an error.
-func getEnvName(v reflect.Value, i int, idx int, args ExtractorArgs) (string, error) {
+// It returns the environment variable prefix and name as a string
+func getEnvName(v reflect.Value, i int, idx int, args ExtractorArgs) (string, string, error) {
 	envName, haveTagEnv := v.Type().Field(i).Tag.Lookup(envTagName)
 	prefix := ""
 	if args.Configs[idx+1] != "" {
@@ -82,16 +82,16 @@ func getEnvName(v reflect.Value, i int, idx int, args ExtractorArgs) (string, er
 			panic("ERROR: Invalid configuration. Expected string")
 		}
 		if !strings.HasSuffix(prefix, "_") {
-			prefix = prefix + "_"
+			prefix += "_"
 		}
 	}
 	if !haveTagEnv {
 		if args.Options.OmitNotTagged {
-			return "", fmt.Errorf("unable to get the value name: %v", v)
+			return "", "", fmt.Errorf("unable to get the value name: %v", v)
 		}
 		envName = v.Type().Field(i).Name
 	}
-	return prefix + envName, nil
+	return prefix, envName, nil
 }
 
 // setConfigFieldValue handles setting the value of a field in a struct based on its kind.

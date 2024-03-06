@@ -42,46 +42,57 @@ func getEnvValFromCMDArgs(envName string, args []string) string {
 	}
 	for _, arg := range args {
 		arg = cleanCMDArgName(arg)
-		if !isValidCMDArgStartName(rune(arg[0])) {
+		if !isArgStartValid(arg) {
 			continue
 		}
 		// boolean flag case
 		if arg == envName {
 			return defaultCMDArgValue
 		}
-		for _, c := range arg {
-			if c == '=' {
-				spArgs := strings.SplitN(arg, "=", 2)
-				if spArgs[0] != envName {
-					continue
-				}
-				if len(spArgs) > 1 {
-					return removeQuotes(spArgs[1])
-				} else {
-					return defaultCMDArgValue
-				}
-			}
+		value := checkEnvNameInArg(arg, envName)
+		if value != "" {
+			return value
 		}
 	}
 	return ""
 }
 
-func getEnvValFromOSEnv(envName string) string {
-	val, exist := os.LookupEnv(envName)
+func isArgStartValid(arg string) bool {
+	if len(arg) > 0 {
+		r := rune(arg[0])
+		return isValidCMDArgStartName(r)
+	}
+	return false
+}
+
+func checkEnvNameInArg(arg, envName string) string {
+	// look for '=' in arg
+	spArgs := strings.SplitN(arg, "=", 2)
+	if spArgs[0] != envName {
+		return ""
+	}
+	if len(spArgs) > 1 {
+		return removeQuotes(spArgs[1])
+	}
+	return defaultCMDArgValue
+}
+
+func getEnvValFromOSEnv(prefix, envName string) string {
+	val, exist := os.LookupEnv(prefix + envName)
 	if !exist {
 		return ""
 	}
 	return val
 }
 
-func getEnvValuesFromSources(envName string, opts ExtractorOptions) (string, envSource) {
+func getEnvValuesFromSources(prefix, envName string, opts ExtractorOptions) (string, envSource) {
 	val := ""
 	var finalSource envSource
 	for _, source := range opts.EnvSourcePrecedence {
 		switch source {
 		case OSEnv:
 			envNameKey := changeCase(opts.EnvNameCaseType, envName)
-			val = getEnvValFromOSEnv(envNameKey)
+			val = getEnvValFromOSEnv(prefix, envNameKey)
 		case CMDArgs:
 			envNameKey := changeCase(opts.CMDArgsNameCaseType, envName)
 			val = getEnvValFromCMDArgs(envNameKey, os.Args)
